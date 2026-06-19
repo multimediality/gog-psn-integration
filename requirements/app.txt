@@ -1,0 +1,2 @@
+galaxy.plugin.api==0.71
+beautifulsoup4==4.12.3
