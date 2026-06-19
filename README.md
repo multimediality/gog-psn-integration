@@ -6,7 +6,8 @@ Community plugin for **GOG Galaxy 2.1.3+** that syncs your PlayStation Network l
 
 ## Requirements
 
-- GOG Galaxy **2.1.3+** (bundled Python 3.13)
+- GOG Galaxy **2.1.3 or newer** (ships with Python 3.13)
+- **Not compatible with GOG Galaxy 2.0.x** (Python 3.7) — update Galaxy before installing
 - Windows 10/11 64-bit or macOS Sonoma 14+
 
 ## Install from GitHub Release (recommended)

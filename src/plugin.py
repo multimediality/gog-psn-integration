@@ -1,5 +1,13 @@
 import logging
 import sys
+
+if sys.version_info < (3, 13):
+    raise ImportError(
+        "This plugin requires GOG Galaxy 2.1.3 or newer (bundled Python 3.13). "
+        f"Detected Python {sys.version_info.major}.{sys.version_info.minor}. "
+        "Update GOG Galaxy from https://www.gog.com/galaxy, then reinstall the plugin."
+    )
+
 from typing import Any, List
 
 from galaxy.api.consts import LicenseType, Platform
