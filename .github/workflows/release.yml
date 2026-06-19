@@ -24,10 +24,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
 
       - name: Install dev dependencies
-        run: uv pip install --system -r requirements/dev.txt
+        run: |
+          uv venv --python 3.13
+          uv pip install -r requirements/dev.txt
 
       - name: Build release zip
-        run: invoke release
+        run: uv run invoke release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
