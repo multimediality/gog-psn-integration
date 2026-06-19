@@ -15,10 +15,8 @@ jobs:
         include:
           - os: windows-latest
             zip: windows.zip
-            uv_platform: x86_64-pc-windows-msvc
           - os: macos-latest
             zip: macos.zip
-            uv_platform: aarch64-apple-darwin
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +28,6 @@ jobs:
 
       - name: Build release zip
         run: invoke release
-        env:
-          UV_PYTHON_PLATFORM: ${{ matrix.uv_platform }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
