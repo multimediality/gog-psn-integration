@@ -27,14 +27,37 @@ To update: quit Galaxy, replace the plugin folder contents with the new release 
 
 ## Install from source
 
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Python **3.12+** for development.
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Python **3.13** for development (matches GOG Galaxy's bundled runtime).
 
 ```bash
 git clone https://github.com/multimediality/gog-psn-integration
 cd gog-psn-integration
-uv venv
-uv pip install -r requirements/dev.txt   # Windows: .venv\Scripts\activate first if needed
-invoke install                           # quit GOG Galaxy first
+uv venv --python 3.13
+uv pip install -r requirements/dev.txt
+```
+
+`invoke` is installed into `.venv`, not globally. Activate the venv before running it:
+
+```powershell
+# Windows (PowerShell)
+.venv\Scripts\activate
+```
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Your prompt should show `(.venv)`. Then fully quit GOG Galaxy and install the plugin:
+
+```bash
+invoke install
+```
+
+Alternatively, skip activation and use `uv run` (works for all `invoke` commands below):
+
+```bash
+uv run invoke install
 ```
 
 ## Authentication (NPSSO)
@@ -100,11 +123,13 @@ Useful lines after sync:
 
 ## Development
 
+With the venv activated (see **Install from source**), or prefix commands with `uv run`:
+
 ```bash
 invoke test      # unit tests
 invoke build     # build/ folder only
 invoke release   # build/ + dist/windows.zip or dist/macos.zip
-invoke install   # build + copy to Galaxy plugins dir
+invoke install   # build + copy to Galaxy plugins dir (quit Galaxy first)
 ```
 
 Builds use **uv** to install Python 3.13 wheels into `build/`. Tag a release with `git tag v1.0.0 && git push origin v1.0.0` to trigger GitHub Actions, which publishes `windows.zip` and `macos.zip`.
