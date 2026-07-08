@@ -41,7 +41,13 @@ def test_local_server_serves_form_and_captures_token():
                     assert resp.status == 200
                     body = await resp.text()
                     assert 'name="npsso"' in body
+                    assert 'id="open-store"' in body
+                    assert 'id="open-npsso"' in body
                     assert f'action="{DONE_PATH}"' in body
+                async with session.get(f"{server.base_url.rstrip('/')}/open?target=store") as resp:
+                    assert resp.status == 204
+                async with session.get(f"{server.base_url.rstrip('/')}/open?target=invalid") as resp:
+                    assert resp.status == 400
                 done_url = f"{server.base_url.rstrip('/')}{DONE_PATH}?npsso=mytoken"
                 async with session.get(done_url, allow_redirects=False) as resp:
                     assert resp.status == 302

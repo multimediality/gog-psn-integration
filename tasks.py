@@ -13,7 +13,8 @@ from invoke.exceptions import Exit
 
 BASE_DIR = Path(__file__).resolve().parent
 SRC_DIR = BASE_DIR / "src"
-GUID = "e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b"
+GUID = "38087aea-3c30-439f-867d-ddf9fae8fe6f"
+LEGACY_GUID = "e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b"
 SYSTEM = platform.system()
 
 
@@ -177,6 +178,13 @@ def install(c, output="build"):
     build(c, output=output)
 
     dst = plugins_dir() / f"psn_{GUID}"
+    legacy_dst = plugins_dir() / f"psn_{LEGACY_GUID}"
+    if legacy_dst.exists() and legacy_dst != dst:
+        print(f"--> Removing legacy plugin folder {legacy_dst}")
+        try:
+            shutil.rmtree(legacy_dst)
+        except PermissionError:
+            print("--> Could not remove legacy folder; quit Galaxy and delete it manually")
     install_plugin(output_path, dst)
     verify_install(dst)
     print(f"--> Installed to {dst}")

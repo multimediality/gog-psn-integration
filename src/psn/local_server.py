@@ -1,12 +1,21 @@
 import logging
 import socket
+import webbrowser
 from typing import Optional
 
 from aiohttp import web
 
+from psn.constants import NPSSO_COOKIE_URL, PSN_STORE_URL
+
 logger = logging.getLogger(__name__)
 
 DONE_PATH = "/done"
+OPEN_PATH = "/open"
+
+_OPEN_TARGETS = {
+    "store": PSN_STORE_URL,
+    "npsso": NPSSO_COOKIE_URL,
+}
 
 # Galaxy reliably matches navigations to playstation.com (it does NOT hook
 # http://127.0.0.1 loopback navigations), so we finish the flow by redirecting
@@ -36,11 +45,13 @@ _FORM_HTML = """<!DOCTYPE html>
                     font-family: Consolas, monospace; font-size: 11px;
                     border: 1px solid #444; background: #222; color: #fff;
                     border-radius: 4px; }}
-  .copy-btn {{ padding: 6px 10px; background: #333; color: #eee;
-               border: 1px solid #555; border-radius: 4px; cursor: pointer;
-               font-size: 11px; line-height: 1; flex-shrink: 0; }}
-  .copy-btn:hover {{ background: #444; }}
-  .copy-btn.copied {{ background: #1a5c1a; border-color: #2d8a2d; }}
+  .action-btn {{ padding: 6px 10px; background: #333; color: #eee;
+                 border: 1px solid #555; border-radius: 4px; cursor: pointer;
+                 font-size: 11px; line-height: 1; flex-shrink: 0; }}
+  .action-btn:hover {{ background: #444; }}
+  .action-btn.done {{ background: #1a5c1a; border-color: #2d8a2d; }}
+  .open-btn {{ background: #1a3a6e; border-color: #2a5090; }}
+  .open-btn:hover {{ background: #234a82; }}
   #npsso {{ width: 100%; padding: 8px; margin: 4px 0 10px; border: 1px solid #444;
             background: #222; color: #fff; border-radius: 4px; font-size: 13px; }}
   button[type="submit"] {{ padding: 8px 18px; background: #00439c; color: #fff;
@@ -61,25 +72,34 @@ function copyText(inputId, buttonId) {{
   try {{ copied = document.execCommand("copy"); }} catch (e) {{}}
   if (!copied && navigator.clipboard) {{
     navigator.clipboard.writeText(input.value).then(function() {{
-      showCopied(button);
+      showDone(button);
     }}).catch(function() {{ showSelectHint(button); }});
     return;
   }}
-  if (copied) {{ showCopied(button); }} else {{ showSelectHint(button); }}
+  if (copied) {{ showDone(button); }} else {{ showSelectHint(button); }}
 }}
-function showCopied(button) {{
+function showDone(button, label) {{
   var original = button.textContent;
-  button.textContent = "\\u2713";
-  button.classList.add("copied");
+  button.textContent = label || "\\u2713";
+  button.classList.add("done");
   setTimeout(function() {{
     button.textContent = original;
-    button.classList.remove("copied");
+    button.classList.remove("done");
   }}, 1200);
 }}
 function showSelectHint(button) {{
   var original = button.textContent;
   button.textContent = MOD_KEY + "+C";
   setTimeout(function() {{ button.textContent = original; }}, 1500);
+}}
+function openTarget(target, buttonId) {{
+  var button = document.getElementById(buttonId);
+  fetch("{open_path}?target=" + encodeURIComponent(target))
+    .then(function(resp) {{
+      if (resp.ok) {{ showDone(button); }}
+      else {{ showDone(button, "!"); }}
+    }})
+    .catch(function() {{ showDone(button, "!"); }});
 }}
 document.addEventListener("DOMContentLoaded", function() {{
   var el = document.getElementById("shortcuts");
@@ -92,14 +112,16 @@ document.addEventListener("DOMContentLoaded", function() {{
 </head>
 <body>
   <h2>Connect your PSN account</h2>
-  <p class="hint">Your browser should open automatically. External links do not work here —
-     use Copy or <span id="shortcuts"></span>.</p>
+  <p class="hint">Use Open to launch your system browser, or Copy and
+     <span id="shortcuts"></span>.</p>
 
   <div class="field">
     <span class="field-label">1. Sign in at</span>
     <div class="url-row">
       <input id="url-store" type="text" readonly value="https://store.playstation.com">
-      <button type="button" class="copy-btn" id="copy-store"
+      <button type="button" class="action-btn open-btn" id="open-store"
+              onclick="openTarget('store', 'open-store')">Open</button>
+      <button type="button" class="action-btn" id="copy-store"
               onclick="copyText('url-store', 'copy-store')">Copy</button>
     </div>
   </div>
@@ -109,7 +131,9 @@ document.addEventListener("DOMContentLoaded", function() {{
     <div class="url-row">
       <input id="url-npsso" type="text" readonly
              value="https://ca.account.sony.com/api/v1/ssocookie">
-      <button type="button" class="copy-btn" id="copy-npsso"
+      <button type="button" class="action-btn open-btn" id="open-npsso"
+              onclick="openTarget('npsso', 'open-npsso')">Open</button>
+      <button type="button" class="action-btn" id="copy-npsso"
               onclick="copyText('url-npsso', 'copy-npsso')">Copy</button>
     </div>
   </div>
@@ -157,6 +181,7 @@ class LocalAuthServer:
         app = web.Application()
         app.router.add_get("/", self._handle_form)
         app.router.add_get(DONE_PATH, self._handle_done)
+        app.router.add_get(OPEN_PATH, self._handle_open)
 
         self._runner = web.AppRunner(app)
         await self._runner.setup()
@@ -183,9 +208,18 @@ class LocalAuthServer:
 
     async def _handle_form(self, _request):
         return web.Response(
-            text=_FORM_HTML.format(done_path=DONE_PATH),
+            text=_FORM_HTML.format(done_path=DONE_PATH, open_path=OPEN_PATH),
             content_type="text/html",
         )
+
+    async def _handle_open(self, request):
+        target = (request.query.get("target") or "").strip().lower()
+        url = _OPEN_TARGETS.get(target)
+        if not url:
+            return web.Response(status=400, text="Unknown target")
+        logger.info("Opening system browser for PSN auth target=%s", target)
+        webbrowser.open(url)
+        return web.Response(status=204)
 
     async def _handle_done(self, request):
         token = (request.query.get("npsso") or "").strip()

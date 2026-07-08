@@ -1,6 +1,5 @@
 import logging
 import os
-import webbrowser
 from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, unquote, urlparse
@@ -10,7 +9,7 @@ from galaxy.api.types import Authentication, NextStep
 from yarl import URL
 
 from psn.client import PSNClient
-from psn.constants import NPSSO_AUTH_QUERY_PARAM, NPSSO_COOKIE_URL, PSN_STORE_URL
+from psn.constants import NPSSO_AUTH_QUERY_PARAM, NPSSO_COOKIE_URL
 from psn.local_server import LocalAuthServer
 from psn.oauth import exchange_npsso_for_tokens, user_info_from_id_token
 
@@ -82,11 +81,6 @@ class PSNAuthenticator:
         self._stored_payload = dict(payload)
         self._store_credentials(payload)
 
-    def _open_system_browser_for_npsso(self):
-        logger.info("Opening system browser for PSN NPSSO cookie")
-        webbrowser.open(PSN_STORE_URL)
-        webbrowser.open(NPSSO_COOKIE_URL)
-
     async def authenticate(
         self, stored_credentials: Optional[Dict[str, Any]] = None
     ):
@@ -114,7 +108,6 @@ class PSNAuthenticator:
 
     async def _build_local_auth_step(self) -> NextStep:
         await self._local_server.start()
-        self._open_system_browser_for_npsso()
         logger.info(
             "Starting local browser auth (start_uri=%s)", self._local_server.base_url
         )

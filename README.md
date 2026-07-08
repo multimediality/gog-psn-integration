@@ -2,7 +2,7 @@
 
 Community plugin for **GOG Galaxy 2.1.3+** that syncs your PlayStation Network library, play time, and trophies into Galaxy.
 
-**Plugin GUID:** `e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b`
+**Plugin GUID:** `38087aea-3c30-439f-867d-ddf9fae8fe6f` (same as FriendsOfGalaxy PSN — in-place upgrade from Galaxy 2.0)
 
 ## Requirements
 
@@ -16,15 +16,19 @@ Community plugin for **GOG Galaxy 2.1.3+** that syncs your PlayStation Network l
 2. Fully quit GOG Galaxy.
 3. Extract the zip into a new folder under the plugins directory:
 
-   Windows: `%LOCALAPPDATA%\GOG.com\Galaxy\plugins\installed\psn_e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b`
+   Windows: `%LOCALAPPDATA%\GOG.com\Galaxy\plugins\installed\psn_38087aea-3c30-439f-867d-ddf9fae8fe6f`
 
-   macOS: `~/Library/Application Support/GOG.com/Galaxy/plugins/installed/psn_e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b`
+   macOS: `~/Library/Application Support/GOG.com/Galaxy/plugins/installed/psn_38087aea-3c30-439f-867d-ddf9fae8fe6f`
 
    The folder must contain `manifest.json` and `plugin.py` at the top level (not nested inside another folder).
 
 4. Restart Galaxy → **Add games and friends** → connect **PlayStation Network**.
 
 To update: quit Galaxy, replace the plugin folder contents with the new release zip, restart.
+
+### Migrating from the pre-1.1.0 GUID
+
+If you installed an earlier build under `psn_e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b`, quit Galaxy, delete that folder, install into `psn_38087aea-3c30-439f-867d-ddf9fae8fe6f` above, move `npsso.token` if you use one, then reconnect PSN in Galaxy. `invoke install` removes the legacy folder automatically when Galaxy is quit.
 
 ## Install from source
 
@@ -76,7 +80,7 @@ See `src/npsso.token.example`. Tokens last ~2 months. Delete `npsso.token` or di
 
 ### Alternative: Galaxy auth window
 
-Click **Connect** → copy `npsso` from your browser → paste into the compact form in the Galaxy window → **Connect**.
+Click **Connect** → use **Open** (or **Copy**) for the store and NPSSO pages in your system browser → paste the token into the form → **Connect**.
 
 ## Features
 
@@ -114,7 +118,7 @@ Seeing many unknown tiles alongside a large library is expected and often a sign
 
 ## Logs
 
-`%PROGRAMDATA%\GOG.com\Galaxy\logs\plugin-psn-e4b92a16-7f3c-4d8a-9e1b-2c6f8a3d5e7b.log`
+`%PROGRAMDATA%\GOG.com\Galaxy\logs\plugin-psn-38087aea-3c30-439f-867d-ddf9fae8fe6f.log`
 
 Useful lines after sync:
 
@@ -133,7 +137,7 @@ invoke release   # build/ + dist/windows.zip or dist/macos.zip
 invoke install   # build + copy to Galaxy plugins dir (quit Galaxy first)
 ```
 
-Builds use **uv** to install Python 3.13 wheels into `build/`. Tag a release with `git tag v1.0.0 && git push origin v1.0.0` to trigger GitHub Actions, which publishes `windows.zip` and `macos.zip`.
+Builds use **uv** to install Python 3.13 wheels into `build/`. Tag a release with `git tag v1.1.0 && git push origin v1.1.0` to trigger GitHub Actions, which publishes `windows.zip` and `macos.zip`.
 
 ## Disclaimer
 
